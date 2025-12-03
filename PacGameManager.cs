@@ -5,6 +5,10 @@ public class PacGameManager : MonoBehaviour
     public TMPro.TextMeshProUGUI pelletText;
     public static PacGameManager Instance { get; private set; }
 
+    [Header("XR")]
+    public RecenterOrigin recenterOrigin;
+
+
     [Header("Player")]
     public Transform playerRoot;   // PacMover
     public Transform playerHead;   // XR camera (optional)
@@ -30,8 +34,8 @@ public class PacGameManager : MonoBehaviour
     {
         get
         {
-            // use head if assigned, otherwise fall back to root
-            return (playerHead != null) ? playerHead.position : playerRoot.position;
+            // gameplay position is always the PacMover root
+            return playerRoot.position;
         }
     }
 
@@ -125,7 +129,7 @@ public class PacGameManager : MonoBehaviour
     }
 
 
-    public void ResetLevel(bool ghostCaught)
+   public void ResetLevel(bool ghostCaught)
     {
         if (ghostCaught && audioSource != null && deadSound != null)
             audioSource.PlayOneShot(deadSound);
@@ -140,10 +144,14 @@ public class PacGameManager : MonoBehaviour
             UpdatePelletUI();
         }
 
-        // reset player
+        // reset player root to start tile
         playerRoot.position = startRootPos;
 
-        // reset ALL ghosts
+        // recenter XR Origin based on current HMD pose
+        if (recenterOrigin != null)
+            recenterOrigin.Recenter();
+
+        // reset all ghosts
         if (ghosts != null)
         {
             for (int i = 0; i < ghosts.Length; i++)
@@ -161,7 +169,6 @@ public class PacGameManager : MonoBehaviour
             }
         }
     }
-
 
 
     void UpdatePelletUI()
